@@ -1,4 +1,5 @@
 import numpy as np
+import os
 from typing import Tuple, List
 from source.configs import (
     MODEL_IMAGE_SIZE,
@@ -6,10 +7,12 @@ from source.configs import (
     NON_FIGHT_VIDEOS_PATH,
     FIGHT_CLASS_NAME,
     NON_FIGHT_CLASS_NAME,
-    DATASET_LIMITATION
+    DATASET_LIMITATION,
+    SAVED_DATASETS_FOLDER
 )
 from source.model.normalizer import normalize_frames_to_model
 from source.platform.folder import folder_walker
+from source.platform.uuid import short_uuid
 from source.video.frames import extract_frames
 from source.video.preprocessing import resizer
 
@@ -43,6 +46,47 @@ def build_dataset() -> Tuple[np.ndarray, np.ndarray, List[str]]:
     videos_path = fight_videos_path + nonfight_videos_path
 
     return features_dataset, labels_dataset, videos_path
+
+def save_dataset(features_dataset: np.ndarray, 
+                 labels_dataset: np.ndarray, 
+                 videos_path: List[str]) -> None:
+    """
+    Save the dataset (features, labels, and video paths) as .npy files in a 
+    new folder within the SAVED_DATASETS_FOLDER. Each dataset is assigned a 
+    unique identifier.
+
+    Parameters
+    ----------
+    features_dataset : np.ndarray
+        The numpy array containing features extracted from videos.
+    labels_dataset : np.ndarray
+        The numpy array containing labels corresponding to the features.
+    videos_path : List[str]
+        A list of video file paths corresponding to the dataset.
+
+    Returns
+    -------
+    None
+    """
+    uuid = short_uuid()
+
+    if not os.path.exists(SAVED_DATASETS_FOLDER):
+        os.mkdir(SAVED_DATASETS_FOLDER)
+
+    new_dataset_folder = os.path.join(SAVED_DATASETS_FOLDER, uuid)
+    os.mkdir(new_dataset_folder)
+
+    features_file_name = f"features-{uuid}.npy"
+    labels_file_name = f"labels-{uuid}.npy"
+    videos_path_file_name = f"videos-path-{uuid}.npy"
+
+    # Save the datasets as .npy files
+    np.save(os.path.join(new_dataset_folder, features_file_name), 
+            features_dataset)
+    np.save(os.path.join(new_dataset_folder, labels_file_name), 
+            labels_dataset)
+    np.save(os.path.join(new_dataset_folder, videos_path_file_name), 
+            videos_path)
 
 def extract_features(folder: str, class_name: str) -> Tuple[
         List[np.ndarray], List[str], List[str]]:
@@ -84,7 +128,6 @@ def extract_features(folder: str, class_name: str) -> Tuple[
         features.append(frames)
         videos_path.append(video_path)
 
-    # Generate labels for all features
     labels = [class_name] * len(features)
 
     return features, labels, videos_path

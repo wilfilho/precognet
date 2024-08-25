@@ -7,3 +7,4 @@ NON_FIGHT_CLASS_NAME = "nonfight"
 FIGHT_VIDEOS_PATH = "/Users/wilson/Documents/tcc/dataset/fight"
 NON_FIGHT_VIDEOS_PATH = "/Users/wilson/Documents/tcc/dataset/nonfight"
 DATASET_LIMITATION = 3
+SAVED_DATASETS_FOLDER = "/Users/wilson/Documents/tcc/precognet/.datasets"
