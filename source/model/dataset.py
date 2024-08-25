@@ -15,6 +15,8 @@ from source.platform.folder import folder_walker
 from source.platform.uuid import short_uuid
 from source.video.frames import extract_frames
 from source.video.preprocessing import resizer
+from keras.api.utils import to_categorical
+from sklearn.model_selection import train_test_split
 
 def build_dataset() -> Tuple[np.ndarray, np.ndarray, List[str]]:
     """
@@ -42,7 +44,7 @@ def build_dataset() -> Tuple[np.ndarray, np.ndarray, List[str]]:
     )
     
     features_dataset = np.asarray(fight_features + nonfight_features)
-    labels_dataset = np.asarray(fight_labels + nonfight_labels)
+    labels_dataset = np.array(fight_labels + nonfight_labels)
     videos_path = fight_videos_path + nonfight_videos_path
 
     return features_dataset, labels_dataset, videos_path
@@ -124,6 +126,21 @@ def load_dataset(dataset_uuid: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray]
         np.load(videos_path_file_name)
     )
 
+def prepare_dataset_to_train(
+        features_dataset: np.ndarray, 
+        labels_dataset: np.ndarray):
+    
+    labels = to_categorical(labels_dataset)
+
+    print (labels)
+
+    return train_test_split(
+        features_dataset, labels,
+        test_size = 0.1,
+        shuffle = True,
+        random_state = 42
+    )
+
 
 def extract_features(folder: str, class_name: str) -> Tuple[
         List[np.ndarray], List[str], List[str]]:
@@ -162,8 +179,14 @@ def extract_features(folder: str, class_name: str) -> Tuple[
                 extract_frames(video_path), MODEL_IMAGE_SIZE
             )
         )
-        features.append(frames)
-        videos_path.append(video_path)
+
+        # split all frames into sub lists of 16 items
+        # removes the last item that doesn't have 16 items
+        all_subframes = [frames[i:i + 16] for i in range(0, len(frames), 16)][:-1]
+
+        for subframe in all_subframes:
+            features.append(subframe)
+            videos_path.append(video_path)
 
     labels = [class_name] * len(features)
 
