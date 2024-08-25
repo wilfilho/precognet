@@ -88,6 +88,43 @@ def save_dataset(features_dataset: np.ndarray,
     np.save(os.path.join(new_dataset_folder, videos_path_file_name), 
             videos_path)
 
+def load_dataset(dataset_uuid: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Load a saved dataset (features, labels, and video paths) from a specified 
+    folder using the dataset UUID.
+
+    Parameters
+    ----------
+    dataset_uuid : str
+        The unique identifier for the dataset folder.
+
+    Returns
+    -------
+    Tuple[np.ndarray, np.ndarray, np.ndarray]
+        A tuple containing:
+        - features: Numpy array of the features dataset.
+        - labels: Numpy array of the labels dataset.
+        - videos_path: Numpy array of the video file paths.
+    """
+    dataset_folder = os.path.join(SAVED_DATASETS_FOLDER, dataset_uuid)
+
+    features_file_name = os.path.join(
+        dataset_folder, f"features-{dataset_uuid}.npy"
+    )
+    labels_file_name = os.path.join(
+        dataset_folder, f"labels-{dataset_uuid}.npy"
+    )
+    videos_path_file_name = os.path.join(
+        dataset_folder, f"videos-path-{dataset_uuid}.npy"
+    )
+
+    return (
+        np.load(features_file_name),
+        np.load(labels_file_name),
+        np.load(videos_path_file_name)
+    )
+
+
 def extract_features(folder: str, class_name: str) -> Tuple[
         List[np.ndarray], List[str], List[str]]:
     """

@@ -1,4 +1,4 @@
-from source.model.dataset import build_dataset, save_dataset
+from source.model.dataset import build_dataset, save_dataset, load_dataset
 import matplotlib.pyplot as plt
 import numpy as np
 import time
@@ -16,8 +16,7 @@ def main():
     start_time = time.time()
     # frames = resizer(extract_frames(selected_video), MODEL_IMAGE_SIZE)
     # normalized_frames = normalize_frames_to_model(frames)
-    features_dataset, labels_dataset, videos_path = build_dataset()
-    save_dataset(features_dataset, labels_dataset, videos_path)
+    features_dataset, labels_dataset, videos_path = load_dataset("b9a96c35-320e")
     print("--- %.2f seconds ---" % (time.time() - start_time))
     print (len(features_dataset))
     print (len(labels_dataset))
