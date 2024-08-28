@@ -7,5 +7,6 @@ BATCH_SIZE = 16
 # Dataset sources
 FIGHT_VIDEOS_PATH = "/Users/wilson/Documents/tcc/dataset/fight"
 NON_FIGHT_VIDEOS_PATH = "/Users/wilson/Documents/tcc/dataset/nonfight"
-DATASET_LIMITATION = 2
+DATASET_LIMITATION = 100
 SAVED_DATASETS_FOLDER = "/Users/wilson/Documents/tcc/precognet/.datasets"
+SAVED_WEIGHTS_FOLDER = "/Users/wilson/Documents/tcc/precognet/.weights"

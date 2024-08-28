@@ -132,8 +132,6 @@ def prepare_dataset_to_train(
     
     labels = to_categorical(labels_dataset)
 
-    print (labels)
-
     return train_test_split(
         features_dataset, labels,
         test_size = 0.1,
