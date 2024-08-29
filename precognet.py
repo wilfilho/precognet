@@ -1,27 +1,20 @@
-from source.model.dataset import (
-    build_dataset,
-    save_dataset,
-    load_dataset,
-    prepare_dataset_to_train
-)
-from source.configs import SAVED_WEIGHTS_FOLDER
-from source.model.model import model, train_model, load_model_weights
-from source.platform.uuid import short_uuid
-from keras.api.callbacks import ReduceLROnPlateau, EarlyStopping
-from keras.api.models import load_model
+from source.configs import SAVED_WEIGHTS_FOLDER, NON_FIGHT_VIDEOS_PATH, MAPPED_CLASSES
+from source.model.model import model, load_model_weights
+from source.video.frames import prepare_video
 import matplotlib.pyplot as plt
 import numpy as np
 import time
 import os
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import classification_report
 
 def main():
     start_time = time.time()
-    features_dataset, labels_dataset, _ = build_dataset()
-    _, features_test, _, labels_test = (
-        prepare_dataset_to_train(features_dataset, labels_dataset)
-    )
+    # features_dataset, labels_dataset, _ = build_dataset()
+    # _, features_test, _, labels_test = prepare_dataset_to_train(
+    #     features_dataset, labels_dataset
+    # )
+    
+    video_path = os.path.join(NON_FIGHT_VIDEOS_PATH, "7KXPekwe_0.avi")
+    video = prepare_video(video_path)
 
     # train model
     precognet = model()
@@ -33,14 +26,18 @@ def main():
     # train_model(precognet)
 
     # show results
-    print("--- %.2f seconds ---" % (time.time() - start_time))
-    labels_predict = precognet.predict(features_test)
-    labels_predict = np.argmax(labels_predict , axis=1)
-    labels_test_normal = np.argmax(labels_test , axis=1)
-    score_on_testing = accuracy_score(labels_predict, labels_test_normal)
-    report = classification_report(labels_test_normal,labels_predict)
-    print(f'Accuracy Score is : {score_on_testing}')
-    print(f'Classification Report is : \n${report}')
+    for queued_frames in video:
+        predicted_labels_probabilities = precognet.predict(
+            np.expand_dims(queued_frames, axis = 0)
+        )[0]
+
+        predicted_label = np.argmax(predicted_labels_probabilities)
+        probability = predicted_labels_probabilities.max()
+
+        if probability < 0.6:
+            predicted_label = -1
+
+        print (f'Prediction: {MAPPED_CLASSES[predicted_label]} | Probability: {probability}')
 
 if __name__ == '__main__':
     main()

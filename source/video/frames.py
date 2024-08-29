@@ -1,6 +1,9 @@
 from typing import List
 import cv2
 import numpy as np
+from source.model.normalizer import normalize_frames_to_model
+from source.video.preprocessing import resizer
+from source.configs import MODEL_IMAGE_SIZE
 
 def extract_frames(file_path: str) -> List[np.ndarray]:
     """
@@ -33,3 +36,20 @@ def extract_frames(file_path: str) -> List[np.ndarray]:
     video_cap.release()
 
     return images
+
+def prepare_video(video_path):
+    features = []
+    frames = normalize_frames_to_model(
+        resizer(
+            extract_frames(video_path), MODEL_IMAGE_SIZE
+        )
+    )
+
+    # split all frames into sub lists of 16 items
+    # removes the last item that doesn't have 16 items
+    all_subframes = [frames[i:i + 16] for i in range(0, len(frames), 16)][:-1]
+
+    for subframe in all_subframes:
+        features.append(subframe)
+    
+    return features

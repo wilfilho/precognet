@@ -13,7 +13,7 @@ from source.configs import (
 from source.model.normalizer import normalize_frames_to_model
 from source.platform.folder import folder_walker
 from source.platform.uuid import short_uuid
-from source.video.frames import extract_frames
+from source.video.frames import extract_frames, prepare_video
 from source.video.preprocessing import resizer
 from keras.api.utils import to_categorical
 from sklearn.model_selection import train_test_split
@@ -172,19 +172,11 @@ def extract_features(folder: str, class_name: str) -> Tuple[
     videos_path = []
 
     for video_path in videos:
-        frames = normalize_frames_to_model(
-            resizer(
-                extract_frames(video_path), MODEL_IMAGE_SIZE
-            )
-        )
+        subframes = prepare_video(video_path)
+        paths = [video_path] * len(subframes)
 
-        # split all frames into sub lists of 16 items
-        # removes the last item that doesn't have 16 items
-        all_subframes = [frames[i:i + 16] for i in range(0, len(frames), 16)][:-1]
-
-        for subframe in all_subframes:
-            features.append(subframe)
-            videos_path.append(video_path)
+        features += subframes
+        videos_path += paths
 
     labels = [class_name] * len(features)
 
