@@ -1,3 +1,5 @@
+import os
+
 # Model configs & classes
 MODEL_IMAGE_SIZE = (224, 224)
 FIGHT_CLASS_NAME = 0
@@ -11,8 +13,8 @@ MAPPED_CLASSES = {
 BATCH_SIZE = 16
 
 # Dataset sources
-FIGHT_VIDEOS_PATH = "/Users/wilson/Documents/tcc/dataset/fight"
-NON_FIGHT_VIDEOS_PATH = "/Users/wilson/Documents/tcc/dataset/nonfight"
-DATASET_LIMITATION = 20
+FIGHT_VIDEOS_PATH = os.environ.get('FIGHT_VIDEOS_PATH') # /Users/wilson/Documents/tcc/dataset/fight
+NON_FIGHT_VIDEOS_PATH = os.environ.get('NON_FIGHT_VIDEOS_PATH') # /Users/wilson/Documents/tcc/dataset/nonfight
+DATASET_LIMITATION =  os.environ.get('DATASET_LIMITATION') # 20
 SAVED_DATASETS_FOLDER = "/Users/wilson/Documents/tcc/precognet/.datasets"
 SAVED_WEIGHTS_FOLDER = "/Users/wilson/Documents/tcc/precognet/.weights"
