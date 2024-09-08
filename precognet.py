@@ -1,12 +1,29 @@
 from source.configs import SAVED_WEIGHTS_FOLDER, NON_FIGHT_VIDEOS_PATH, MAPPED_CLASSES
-from source.model.model import model, load_model_weights
+from source.model.model import model, load_model_weights, train_model
 from source.video.frames import prepare_video
+from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 import numpy as np
 import time
 import os
 
 def main():
+    start_time = time.time()
+
+    # train model
+    precognet = model()
+    features_test, labels_test = train_model(precognet)
+    print("--- %.2f seconds ---" % (time.time() - start_time))
+
+    # predict test set
+    labels_predict = precognet.predict(features_test)
+    labels_predict = np.argmax(labels_predict , axis=1)
+    labels_test_normal = np.argmax(labels_test , axis=1)
+
+    acc_score = accuracy_score(labels_predict, labels_test_normal)
+    print (f'Test set accuracy is: {acc_score * 100}%')
+
+def main2():
     start_time = time.time()
     # features_dataset, labels_dataset, _ = build_dataset()
     # _, features_test, _, labels_test = prepare_dataset_to_train(

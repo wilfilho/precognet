@@ -10,7 +10,7 @@ from source.model.dataset import (
     load_dataset,
     prepare_dataset_to_train
 )
-from source.configs import SAVED_WEIGHTS_FOLDER
+from source.configs import SAVED_WEIGHTS_FOLDER, BATCH_SIZE
 from source.platform.uuid import short_uuid
 import os
 
@@ -39,7 +39,7 @@ def model() -> Sequential:
     return model
 
 
-def train_model(model_to_train: Sequential, save: bool = True) -> None:
+def train_model(model_to_train: Sequential, save: bool = True):
     """
     Trains the provided model on the given dataset using early stopping and
     learning rate reduction callbacks.
@@ -81,7 +81,7 @@ def train_model(model_to_train: Sequential, save: bool = True) -> None:
         x=features_train,
         y=labels_train,
         epochs=50,
-        batch_size=9,
+        batch_size=BATCH_SIZE,
         shuffle=True,
         validation_split=0.2,
         callbacks=[early_stopping_callback, reduce_lr]
@@ -92,6 +92,8 @@ def train_model(model_to_train: Sequential, save: bool = True) -> None:
         weights = f'precognet-{short_uuid()}.weights.h5'
         folder_to_save = os.path.join(SAVED_WEIGHTS_FOLDER, weights)
         model_to_train.save_weights(folder_to_save)
+    
+    return features_test, labels_test
 
 def load_model_weights(internal_model: Sequential, weights_path: str) -> None:
     """
