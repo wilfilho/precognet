@@ -10,9 +10,13 @@ from source.model.dataset import (
     load_dataset,
     prepare_dataset_to_train
 )
-from source.configs import SAVED_WEIGHTS_FOLDER, BATCH_SIZE
+from source.configs import SAVED_WEIGHTS_FOLDER, BATCH_SIZE, EPOCHS, SAVED_RESULTS_FOLDER
 from source.platform.uuid import short_uuid
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
+import json
 import os
+import time
+import numpy as np
 
 def model() -> Sequential:
     """
@@ -73,14 +77,14 @@ def train_model(model_to_train: Sequential, save: bool = True):
     
     model_to_train.compile(
         loss='categorical_crossentropy',
-        optimizer='sgd',
+        optimizer='adam',
         metrics=["accuracy"]
     )
     
     model_to_train.fit(
         x=features_train,
         y=labels_train,
-        epochs=50,
+        epochs=EPOCHS,
         batch_size=BATCH_SIZE,
         shuffle=True,
         validation_split=0.2,
@@ -88,12 +92,15 @@ def train_model(model_to_train: Sequential, save: bool = True):
     )
 
     if save:
+        save_dataset(features_test, labels_test, [])
         Path(SAVED_WEIGHTS_FOLDER).mkdir(exist_ok=True)
-        weights = f'precognet-{short_uuid()}.weights.h5'
+        weight_uuid = short_uuid()
+        weights = f'precognet-{weight_uuid}.weights.h5'
         folder_to_save = os.path.join(SAVED_WEIGHTS_FOLDER, weights)
         model_to_train.save_weights(folder_to_save)
+        return features_test, labels_test, folder_to_save, weights, weight_uuid
     
-    return features_test, labels_test
+    return features_test, labels_test, None, None
 
 def load_model_weights(internal_model: Sequential, weights_path: str) -> None:
     """
@@ -108,3 +115,46 @@ def load_model_weights(internal_model: Sequential, weights_path: str) -> None:
         None
     """
     internal_model.load_weights(weights_path)
+
+def train_and_compile_results():
+    start_time = time.time()
+
+    print ("[1] The training has been started.")
+    # train model
+    precognet = model()
+    features_test, labels_test, folder_saved, file_saved, weight_uuid = train_model(precognet)
+    seconds_to_train = time.time() - start_time
+    print (f'[2] The training has been completed in {seconds_to_train} seconds.')
+
+    # predict test set
+    labels_predict = precognet.predict(features_test)
+    labels_predict = np.argmax(labels_predict , axis=1)
+    labels_test_normal = np.argmax(labels_test , axis=1)
+
+    acc_score_final = accuracy_score(labels_predict, labels_test_normal)
+    f1_score_final = f1_score(labels_predict, labels_test_normal)
+    precision_score_final = precision_score(labels_predict, labels_test_normal)
+    recall_score_final = recall_score(labels_predict, labels_test_normal)
+    print ("[3] The results have been captured.")
+
+    result = json.dumps({
+        "seconds_to_train": seconds_to_train,
+        "saved_weights_path": folder_saved,
+        "saved_weights_filename": file_saved,
+        "metrics": {
+            "accuracy": acc_score_final,
+            "f1_score": f1_score_final,
+            "precision": precision_score_final,
+            "recall": recall_score_final
+        }
+    })
+
+    file_to_save = f'result-precognet-{time.time()}-{weight_uuid}.json'
+    results_to_save_path = os.path.join(SAVED_RESULTS_FOLDER, file_to_save)
+
+    Path(SAVED_RESULTS_FOLDER).mkdir(exist_ok=True) 
+    
+    with open(results_to_save_path, 'w') as f:
+        f.write(result)
+    
+    print ("[4] Training and testing has been completed.")
