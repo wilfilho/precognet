@@ -1,2 +1,2 @@
 # precognet
-Lightweight model for violence detection using MobileNet BiLSTM
+Lightweight model for violence detection using MobileNet ConvLSTM
