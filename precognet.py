@@ -1,7 +1,20 @@
 from source.model.model import train_and_compile_results
+from source.model.dataset import build_dataset, save_dataset, extract_features
+from source.configs import FIGHT_VIDEOS_PATH, FIGHT_CLASS_NAME
+import numpy as np
 
 def main():
-    train_and_compile_results()
+    print ('Loading videos...')
+    fight_features, fight_labels, fight_videos_path = extract_features(
+        FIGHT_VIDEOS_PATH, FIGHT_CLASS_NAME
+    )
+    print ('Converting into numpy arrays')
+    features_dataset = np.asarray(fight_features)
+    labels_dataset = np.array(fight_labels)
+    videos_path = fight_videos_path
+
+    print ('Saving dataset')
+    save_dataset(features_dataset, labels_dataset, videos_path)
 
 # def main2():
 #     start_time = time.time()

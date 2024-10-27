@@ -5,6 +5,8 @@ from source.model.normalizer import normalize_frames_to_model
 from source.video.preprocessing import resizer
 from source.configs import MODEL_IMAGE_SIZE
 
+counter = 0
+
 def extract_frames(file_path: str) -> List[np.ndarray]:
     """
     Extracts raw frames from a video file.
@@ -39,6 +41,9 @@ def extract_frames(file_path: str) -> List[np.ndarray]:
 
 def prepare_video(video_path):
     features = []
+    global counter
+    counter += 1
+    print (f'[{counter}] {video_path}')
     frames = normalize_frames_to_model(
         resizer(
             extract_frames(video_path), MODEL_IMAGE_SIZE

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Treinamento</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9fafb;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header.success {
+            color: #10b981;
+            background-color: #f0fdf4;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .header.failure {
+            color: #ef4444;
+            background-color: #fef2f2;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .header h2 {
+            margin: 0;
+            font-size: 22px;
+            color: inherit;
+        }
+        /* Descrição após título */
+        .description {
+            font-size: 16px;
+            color: #6b7280;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .content p {
+            font-size: 16px;
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+        .metrics {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .metric {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .metric h4 {
+            margin: 0;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .metric p {
+            margin: 5px 0 0;
+            font-size: 20px;
+            color: #111827;
+        }
+
+        /* Estilo do botão toggle */
+        .toggle-weights-btn {
+            background-color: #2563eb;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            width: 100%; /* Ocupa toda a largura do contêiner pai */
+        }
+        .toggle-weights-btn:hover {
+            background-color: #1d4ed8;
+        }
+        .toggle-weights-btn span {
+            margin-left: 10px;
+        }
+        .toggle-weights-btn svg {
+            transition: transform 0.3s ease;
+        }
+        .toggle-weights-btn.active svg {
+            transform: rotate(180deg);
+        }
+
+        /* Seção de informação dos pesos */
+        .weights-info {
+            display: none;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+            margin-top: 15px;
+            background-color: #f3f4f6;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            color: #111827;
+            border: 1px solid #e5e7eb;
+        }
+
+        /* Botão de baixar logs */
+        .download-logs-btn {
+            background-color: #3b82f6; /* Nova cor do botão */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+            width: 85%; /* Ocupa toda a largura do contêiner pai */
+        }
+        .download-logs-btn:hover {
+            background-color: #1e40af; /* Nova cor ao passar o mouse */
+        }
+
+        /* Container para os botões lado a lado */
+        .buttons-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .button-wrapper {
+            width: 48%; /* Cada botão ocupa 48% da largura do contêiner */
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header success">
+        <h2>Treinamento Concluído com Sucesso</h2>
+    </div>
+
+    <p class="description">
+        O modelo foi treinado com sucesso e as métricas de desempenho estão listadas abaixo.
+    </p>
+
+    <div class="content">
+        <div class="metrics">
+            <div class="metric">
+                <h4>Acurácia</h4>
+                <p>{{ metrics.accuracy }}</p>
+            </div>
+            <div class="metric">
+                <h4>F1 Score</h4>
+                <p>{{ metrics.f1_score }}</p>
+            </div>
+            <div class="metric">
+                <h4>Precisão</h4>
+                <p>{{ metrics.precision }}</p>
+            </div>
+            <div class="metric">
+                <h4>Recall</h4>
+                <p>{{ metrics.recall }}</p>
+            </div>
+            <div class="metric">
+                <h4>Tempo de Treinamento</h4>
+                <p>{{ seconds_to_train }} segundos</p>
+            </div>
+            <div class="metric">
+                <h4>Tempo de Inferência</h4>
+                <p>{{ inference_time }} segundos</p>
+            </div>
+        </div>
+
+        <!-- Container para os botões lado a lado -->
+        <div class="buttons-container">
+            <!-- Botão para mostrar/ocultar a localização dos pesos -->
+            <div class="button-wrapper">
+                <button class="toggle-weights-btn" onclick="toggleWeightsInfo()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                    <span>Mostrar Pesos</span>
+                </button>
+            </div>
+
+            <!-- Botão para baixar todos os logs -->
+            <div class="button-wrapper">
+                <button class="toggle-weights-btn" onclick="toggleWeightsInfo()">
+                    <span>Copiar Logs</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Informação sobre onde os pesos foram salvos (inicialmente oculto) -->
+        <div class="weights-info" id="weightsInfo">
+            <p>O arquivo de pesos foi salvo em:</p>
+            <p><code>{{ saved_weights_path }}</code></p>
+            <p>Nome do arquivo: <strong>{{ saved_weights_filename }}</strong></p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Este é um e-mail automático. Por favor, não responda.</p>
+    </div>
+</div>
+
+<script>
+    function toggleWeightsInfo() {
+        const weightsInfo = document.getElementById('weightsInfo');
+        const toggleButton = document.querySelector('.toggle-weights-btn');
+        
+        if (weightsInfo.style.display === "block") {
+            weightsInfo.style.display = "none";
+            toggleButton.classList.remove('active');
+            toggleButton.querySelector('span').textContent = "Mostrar Pesos";
+        } else {
+            weightsInfo.style.display = "block";
+            toggleButton.classList.add('active');
+            toggleButton.querySelector('span').textContent = "Esconder Pesos";
+        }
+    }
+</script>
+
+</body>
+</html>
