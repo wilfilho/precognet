@@ -10,13 +10,21 @@ from source.model.dataset import (
     load_dataset,
     prepare_dataset_to_train
 )
-from source.configs import SAVED_WEIGHTS_FOLDER, BATCH_SIZE, EPOCHS, SAVED_RESULTS_FOLDER
+from source.configs import (
+    SAVED_WEIGHTS_FOLDER,
+    BATCH_SIZE, EPOCHS,
+    SAVED_RESULTS_FOLDER,
+    DATASET_FILE_NAME
+)
+from keras.api.utils import to_categorical
 from source.platform.uuid import short_uuid
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
+from sklearn.model_selection import KFold
 import json
 import os
 import time
 import numpy as np
+import h5py
 
 def model() -> Sequential:
     """
@@ -43,7 +51,7 @@ def model() -> Sequential:
     return model
 
 
-def train_model(model_to_train: Sequential, save: bool = True):
+def train_model():
     """
     Trains the provided model on the given dataset using early stopping and
     learning rate reduction callbacks.
@@ -55,52 +63,92 @@ def train_model(model_to_train: Sequential, save: bool = True):
     Returns:
         None
     """
-    features_dataset, labels_dataset, _ = build_dataset()
-    
-    features_train, features_test, labels_train, labels_test = (
-        prepare_dataset_to_train(features_dataset, labels_dataset)
-    )
-    
-    early_stopping_callback = EarlyStopping(
-        monitor='val_accuracy',
-        patience=10,
-        restore_best_weights=True
-    )
-    
-    reduce_lr = ReduceLROnPlateau(
-        monitor='val_loss',
-        factor=0.6,
-        patience=5,
-        min_lr=0.00005,
-        verbose=1
-    )
-    
-    model_to_train.compile(
-        loss='categorical_crossentropy',
-        optimizer='adam',
-        metrics=["accuracy"]
-    )
-    
-    model_to_train.fit(
-        x=features_train,
-        y=labels_train,
-        epochs=EPOCHS,
-        batch_size=BATCH_SIZE,
-        shuffle=True,
-        validation_split=0.2,
-        callbacks=[early_stopping_callback, reduce_lr]
-    )
+    with h5py.File(DATASET_FILE_NAME, 'r') as base_dataset:
+        print ("Loading dataset...")
+        dataset_features = np.array(base_dataset.get('fight-features')) + np.array(base_dataset.get('non-fight-features'))
+        print ("Loading labels...")
+        dataset_labels = np.array(base_dataset.get('fight-labels')) + np.array(base_dataset.get('non-fight-labels'))
+        model_pipeline = model()
+        
+        print ("Configuring model constraints...")
+        early_stopping_callback = EarlyStopping(
+            monitor='val_accuracy',
+            patience=10,
+            restore_best_weights=True
+        )
+        
+        reduce_lr = ReduceLROnPlateau(
+            monitor='val_loss',
+            factor=0.6,
+            patience=5,
+            min_lr=0.00005,
+            verbose=1
+        )
+        
+        print ("Compiling model...")
+        model_pipeline.compile(
+            loss="categorical_crossentropy",
+            optimizer="adam",
+            metrics=["accuracy"]
+        )
+        
+        kf = KFold(n_splits=5)
 
-    if save:
-        save_dataset(features_test, labels_test, [])
-        Path(SAVED_WEIGHTS_FOLDER).mkdir(exist_ok=True)
-        weight_uuid = short_uuid()
-        weights = f'precognet-{weight_uuid}.weights.h5'
-        folder_to_save = os.path.join(SAVED_WEIGHTS_FOLDER, weights)
-        model_to_train.save_weights(folder_to_save)
-        return features_test, labels_test, folder_to_save, weights, weight_uuid
-    
-    return features_test, labels_test, None, None
+        predictions = []
+        true_labels = []
+        scores = []
+        training_times = []
+
+        start_time = time.time()
+
+        print ("Pre training model...")
+        for train_index, test_index in kf.split(dataset_features):
+            internal_start_time = time.time()
+            X_train, X_test = dataset_features[train_index], dataset_features[test_index]
+            y_train, y_test = to_categorical(dataset_labels[train_index]), to_categorical(dataset_labels[test_index])
+
+            print ("K-Dataset selected...")
+            model_pipeline.fit(
+                x=X_train,
+                y=y_train,
+                epochs=EPOCHS,
+                batch_size=BATCH_SIZE,
+                shuffle=True,
+                validation_split=0.2,
+                callbacks=[early_stopping_callback, reduce_lr]
+            )
+
+            y_pred = model_pipeline.predict(X_test)
+            y_pred=np.argmax(y_pred, axis=1)
+            y_test=np.argmax(y_test, axis=1)
+            predictions.extend(y_pred)
+            true_labels.extend(y_test)
+
+            t_result = time.time() - internal_start_time
+
+            print ("Total training time: {:.2f}".format(t_result))
+            training_times.append(t_result)
+
+            scores.append(accuracy_score(y_test, y_pred))
+        
+        training_time = time.time() - start_time
+
+        recall = recall_score(true_labels, predictions, average='macro')
+        precision = precision_score(true_labels, predictions, average='macro')
+        f1 = f1_score(true_labels, predictions, average='macro')
+        accuracy = accuracy_score(true_labels, predictions)
+        cm = confusion_matrix(true_labels, predictions)
+
+        return {
+            "model": model_pipeline,
+            "recall": recall,
+            "precision": precision,
+            "f1": f1,
+            "accuracy": accuracy,
+            "cm": cm,
+            "training_time": training_time,
+            "k_fold_training_times": training_times
+        }
 
 def load_model_weights(internal_model: Sequential, weights_path: str) -> None:
     """

@@ -20,3 +20,5 @@ DATASET_LIMITATION =  int(os.environ.get('DATASET_LIMITATION')) # 20
 SAVED_DATASETS_FOLDER = os.environ.get('SAVED_DATASETS_FOLDER') # /Users/wilson/Documents/tcc/precognet/.datasets
 SAVED_WEIGHTS_FOLDER = os.environ.get('SAVED_WEIGHTS_FOLDER') # /Users/wilson/Documents/tcc/precognet/.weights
 SAVED_RESULTS_FOLDER = os.environ.get('SAVED_RESULTS_FOLDER') # /Users/wilson/Documents/tcc/precognet/.results
+RAW_DATASET_URL = "https://drive.google.com/file/d/1vPqeCJ45u8U0v1W5OVCHpJnoWMev5fQ3"
+DATASET_FILE_NAME = "precognet-dataset.h5"

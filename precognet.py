@@ -1,20 +1,42 @@
-from source.model.model import train_and_compile_results
-from source.model.dataset import build_dataset, save_dataset, extract_features
-from source.configs import FIGHT_VIDEOS_PATH, FIGHT_CLASS_NAME
+from source.model.model import train_model
+from source.model.dataset import extract_features, save_dataset
+from source.configs import (
+    FIGHT_VIDEOS_PATH, 
+    FIGHT_CLASS_NAME, 
+    NON_FIGHT_VIDEOS_PATH, 
+    NON_FIGHT_CLASS_NAME,
+    DATASET_FILE_NAME
+)
 import numpy as np
+import h5py
+
+
+def main():
+    print (train_model())
 
 def main():
     print ('Loading videos...')
-    fight_features, fight_labels, fight_videos_path = extract_features(
+    fight_features, fight_labels, _ = extract_features(
         FIGHT_VIDEOS_PATH, FIGHT_CLASS_NAME
     )
+    non_fight_features, non_fight_labels, _ = extract_features(
+        NON_FIGHT_VIDEOS_PATH, NON_FIGHT_CLASS_NAME
+    )
     print ('Converting into numpy arrays')
-    features_dataset = np.asarray(fight_features)
-    labels_dataset = np.array(fight_labels)
-    videos_path = fight_videos_path
+    f_features_dataset = np.asarray(fight_features)
+    f_labels_dataset = np.array(fight_labels)
+    non_f_features_dataset = np.asarray(non_fight_features)
+    non_f_labels_dataset = np.array(non_fight_labels)
 
-    print ('Saving dataset')
-    save_dataset(features_dataset, labels_dataset, videos_path)
+    print ('Saving into file')
+    with h5py.File(DATASET_FILE_NAME, 'w') as base:
+        base.create_dataset('fight-features', data = f_features_dataset)
+        base.create_dataset('fight-labels', data = f_labels_dataset)
+        base.create_dataset('non-fight-features', data = non_f_features_dataset)
+        base.create_dataset('non-fight-labels', data = non_f_labels_dataset)
+    
+    print ('Finished')
+    
 
 # def main2():
 #     start_time = time.time()
