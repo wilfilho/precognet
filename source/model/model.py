@@ -25,6 +25,7 @@ import os
 import time
 import numpy as np
 import h5py
+import tensorflow as tf
 
 def model() -> Sequential:
     """
@@ -68,7 +69,6 @@ def train_model():
         dataset_features = np.array(base_dataset.get('fight-features')) + np.array(base_dataset.get('non-fight-features'))
         print ("Loading labels...")
         dataset_labels = np.array(base_dataset.get('fight-labels')) + np.array(base_dataset.get('non-fight-labels'))
-        model_pipeline = model()
         
         print ("Configuring model constraints...")
         early_stopping_callback = EarlyStopping(
@@ -86,13 +86,16 @@ def train_model():
         )
         
         print ("Compiling model...")
-        model_pipeline.compile(
-            loss="categorical_crossentropy",
-            optimizer="adam",
-            metrics=["accuracy"]
-        )
+        strategy = tf.distribute.MirroredStrategy()
+        with strategy.scope(): 
+            model_pipeline = model()
+            model_pipeline.compile(
+                loss="categorical_crossentropy",
+                optimizer="adam",
+                metrics=["accuracy"]
+            )
         
-        kf = KFold(n_splits=5)
+        kf = KFold(n_splits=5, shuffle=True, random_state=42)
 
         predictions = []
         true_labels = []
@@ -103,11 +106,11 @@ def train_model():
 
         print ("Pre training model...")
         for train_index, test_index in kf.split(dataset_features):
-            internal_start_time = time.time()
             X_train, X_test = dataset_features[train_index], dataset_features[test_index]
             y_train, y_test = to_categorical(dataset_labels[train_index]), to_categorical(dataset_labels[test_index])
 
-            print ("K-Dataset selected...")
+            print(f'Train set: {len(train_index)}, Test set:{len(test_index)}')
+            internal_start_time = time.time()
             model_pipeline.fit(
                 x=X_train,
                 y=y_train,
