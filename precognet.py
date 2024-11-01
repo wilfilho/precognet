@@ -14,28 +14,28 @@ import h5py
 def main():
     print (train_model())
 
-def main():
-    print ('Loading videos...')
-    fight_features, fight_labels, _ = extract_features(
-        FIGHT_VIDEOS_PATH, FIGHT_CLASS_NAME
-    )
-    non_fight_features, non_fight_labels, _ = extract_features(
-        NON_FIGHT_VIDEOS_PATH, NON_FIGHT_CLASS_NAME
-    )
-    print ('Converting into numpy arrays')
-    f_features_dataset = np.asarray(fight_features)
-    f_labels_dataset = np.array(fight_labels)
-    non_f_features_dataset = np.asarray(non_fight_features)
-    non_f_labels_dataset = np.array(non_fight_labels)
+# def main():
+#     print ('Loading videos...')
+#     fight_features, fight_labels, _ = extract_features(
+#         FIGHT_VIDEOS_PATH, FIGHT_CLASS_NAME
+#     )
+#     non_fight_features, non_fight_labels, _ = extract_features(
+#         NON_FIGHT_VIDEOS_PATH, NON_FIGHT_CLASS_NAME
+#     )
+#     print ('Converting into numpy arrays')
+#     f_features_dataset = np.asarray(fight_features)
+#     f_labels_dataset = np.array(fight_labels)
+#     non_f_features_dataset = np.asarray(non_fight_features)
+#     non_f_labels_dataset = np.array(non_fight_labels)
 
-    print ('Saving into file')
-    with h5py.File(DATASET_FILE_NAME, 'w') as base:
-        base.create_dataset('fight-features', data = f_features_dataset)
-        base.create_dataset('fight-labels', data = f_labels_dataset)
-        base.create_dataset('non-fight-features', data = non_f_features_dataset)
-        base.create_dataset('non-fight-labels', data = non_f_labels_dataset)
+#     print ('Saving into file')
+#     with h5py.File(DATASET_FILE_NAME, 'w') as base:
+#         base.create_dataset('fight-features', data = f_features_dataset)
+#         base.create_dataset('fight-labels', data = f_labels_dataset)
+#         base.create_dataset('non-fight-features', data = non_f_features_dataset)
+#         base.create_dataset('non-fight-labels', data = non_f_labels_dataset)
     
-    print ('Finished')
+#     print ('Finished')
     
 
 # def main2():
